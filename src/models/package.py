@@ -18,6 +18,20 @@ class Package:
     z: int | None = None
     is_inside: bool = False # true kalau dalam truk, false kalau diluar truk
 
+    # taruh paket dalam truk
+    def place(self, x: int, y: int, z: int):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.is_inside = True
+
+    # keluarin paket dari truk
+    def remove(self):
+        self.x = None
+        self.y = None
+        self.z = None
+        self.is_inside = False
+
     # mengembalikan x,y,z min dan maks
     def get_position(self) -> tuple[int, int, int, int, int, int] | None:
         if not self.is_inside or self.x is None or self.y is None or self.z is None:

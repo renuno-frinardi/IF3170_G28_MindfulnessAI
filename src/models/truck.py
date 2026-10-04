@@ -1,21 +1,18 @@
 from dataclasses import dataclass
 from ..types.dimension import Dimension
-from ..models.package import Package
+from .package import Package
 
 @dataclass
 class Truck:
     dimension: Dimension
     max_capacity: int
 
-    # mengecek apakah paket muat & beratnya tidak melebihi kapasitas truk
-    def is_package_fit(self, package: Package) -> bool:
-        if package.weight > self.max_capacity:
-            return False
-
+    # mengecek apakah paket berada dalam truk
+    def is_in_truck(self, package: Package) -> bool:
         pos = package.get_position()
         if pos is None:
             return False
-        
+
         x_min, y_min, z_min, x_max, y_max, z_max = pos
         return (
             0 <= x_min and x_max <= self.dimension.w and

@@ -1,7 +1,7 @@
-from dataclasses import dataclass, field
-from ..types.dimension import Dimension
+from dataclasses import dataclass
 from .package import Package
 from .truck import Truck
+from ..utils.validator import is_feasible
 
 @dataclass
 class State:
@@ -10,18 +10,10 @@ class State:
     value : float = 0.0
 
     def evaluate(self) -> float:
-        total_value = 0.0
-        total_weight = 0.0
-        for package in self.packages:
-            if package.is_inside:
-                if not self.truck.is_package_fit(package):
-                    return -float('inf')
-                
-                total_value += package.value
-                total_weight += package.weight
+        # melanggar aturan
+        if not is_feasible(self):
+            self.value = -float('inf')
+            return self.value
 
-        if total_weight > self.truck.max_capacity:
-            return -float('inf')
-        
-        self.value = total_value
+        self.value = float(sum(p.value for p in self.packages if p.is_inside))
         return self.value
