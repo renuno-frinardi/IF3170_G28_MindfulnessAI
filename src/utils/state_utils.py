@@ -17,10 +17,10 @@ def random_orientation(rng) -> Orientation:
     w, l, h = rng.choice(ORIENTATIONS)
     return Orientation((w, l, h))
 
-# kandidat dengan posisi yang muat dalam truk
-def candidate(state, p) -> tuple[list[int], list[int], list[int]]:
-    dim_w, dim_l, dim_h = p.dimension.get_dimensions(p.orientation.orientation)
-    xs, ys, zs = {0}, {0}, {0}
+# kandidat dengan posisi paket yang muat dalam truk
+def candidate(state, p) -> tuple[list[int], list[int]]:
+    dim_w, dim_l, _ = p.dimension.get_dimensions(p.orientation.orientation)
+    xs, ys = {0}, {0}
     for q in state.packages:
         if not q.is_inside or q.id == p.id:
             continue
@@ -29,16 +29,41 @@ def candidate(state, p) -> tuple[list[int], list[int], list[int]]:
         if pos is None:
             continue
 
-        _, _, _, x1, y1, z1 = pos
+        _, _, _, x1, y1, _ = pos
         xs.add(x1)
         ys.add(y1)
-        zs.add(z1)
 
     t = state.truck.dimension
     xs = sorted(x for x in xs if x + dim_w <= t.w)
     ys = sorted(y for y in ys if y + dim_l <= t.l)
-    zs = sorted(z for z in zs if z + dim_h <= t.h)
-    return xs, ys, zs
+    return xs, ys
+
+# z terendah di (x, y)
+def low_z(state, p, x, y) -> int:
+    dim_w, dim_l, _ = p.dimension.get_dimensions(p.orientation.orientation)
+    z = 0 
+    for q in state.packages:
+        if not q.is_inside or q.id == p.id:
+            continue
+
+        pos = q.get_position()
+        if pos is None:
+            continue
+
+        x0, y0, _, x1, y1, z1 = pos
+        if max(x0, x) < min(x1, x + dim_w) and max(y0, y) < min(y1, y + dim_l):
+            z = max(z, z1)
+            
+    return z
+
+# taruh p di (x, y) dengan z terendah yang mungkin, false jika keluar truk
+def try_place(state, p, x, y) -> bool:
+    z = low_z(state, p, x, y)
+    p.place(x, y, z)
+    if not state.truck.is_in_truck(p):
+        p.remove()
+        return False
+    return True
 
 # copy state agar tidak merusak state awal
 def copy_state(state) -> State:
@@ -74,7 +99,6 @@ def random_initial_state(package, truck, seed=None, tries=10) -> State:
         truck.dimension.h,
     ), max_capacity=truck.max_capacity)
 
-    # salin semua paket sebagai di luar (x,y,z=None, is_inside=False)
     new_packages = []
     for p in package:
         q = Package(
