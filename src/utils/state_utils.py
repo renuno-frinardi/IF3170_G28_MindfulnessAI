@@ -29,13 +29,13 @@ def candidate(state, p) -> tuple[list[int], list[int]]:
         if pos is None:
             continue
 
-        _, _, _, x1, y1, _ = pos
-        xs.add(x1)
-        ys.add(y1)
+        x0, y0, _, x1, y1, _ = pos
+        xs.update((x0, x1, x1 - dim_w))
+        ys.update((y0, y1, y1 - dim_l))
 
     t = state.truck.dimension
-    xs = sorted(x for x in xs if x + dim_w <= t.w)
-    ys = sorted(y for y in ys if y + dim_l <= t.l)
+    xs = sorted(x for x in xs if 0 <= x and x + dim_w <= t.w)
+    ys = sorted(y for y in ys if 0 <= y and y + dim_l <= t.l)
     return xs, ys
 
 # z terendah di (x, y)
@@ -119,7 +119,6 @@ def random_initial_state(package, truck, seed=None, tries=10) -> State:
 
     for idx in order:
         q = new_packages[idx]
-        placed = False
         for _ in range(tries):
             q.orientation = random_orientation(rng)
             dim_w, dim_l, dim_h = q.dimension.get_dimensions(q.orientation.orientation)
@@ -135,11 +134,7 @@ def random_initial_state(package, truck, seed=None, tries=10) -> State:
 
             q.place(x, y, z)
             if is_feasible(state):
-                placed = True
                 break
-            q.remove()
-
-        if not placed:
             q.remove()
 
     state.evaluate()
