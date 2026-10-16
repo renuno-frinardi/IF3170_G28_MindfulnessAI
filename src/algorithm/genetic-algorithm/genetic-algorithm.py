@@ -104,7 +104,7 @@ def crossover(parent1: State, parent2: State) -> tuple[State,State]:
 
 # 4. Mutation
 def mutation(self: State, mut_point):
-    rate = random.uniform(0,100)
+    rate = random.randint(0,100)
     if (rate<MUTATION_RATE):
         # Proses mengubah konfigurasi
         self.packages = 0
@@ -142,7 +142,7 @@ def genetic_algorithm(packages, truck, pilihan, n) -> State:
 
                 # 3. Mutation 
                 for el in parents:
-                    mut_point = random.uniform(0, len(el.packages) - 1)
+                    mut_point = random.randint(0,len(el)-1)
                     mutation(el,mut_point)
 
                 # 4. Hasil Akhir
@@ -170,7 +170,7 @@ def genetic_algorithm(packages, truck, pilihan, n) -> State:
 
                 # 3. Mutation 
                 for el in parents:
-                    mut_point = random.randint(0,len(el.packages)-1)
+                    mut_point = random.randint(0,len(el)-1)
                     mutation(el,mut_point)
 
                 # 4. Hasil Akhir
