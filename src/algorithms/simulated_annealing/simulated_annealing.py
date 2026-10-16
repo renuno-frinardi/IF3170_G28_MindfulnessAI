@@ -3,11 +3,11 @@ import time
 from ...utils.neighbor import random_neighbor
 
 # menurunkan temperatur seiring waktu
-def schedule(t, t_start, alpha):
-    return t_start * (alpha ** (t - 1))
+def schedule(turn, t_start, alpha):
+    return t_start * (alpha ** (turn - 1))
 
 # alpha digunakan untuk memperkecil temperatur
-def simulated_annealing(init, rng, t_start=100.0, alpha=0.95, t_min=1e-2, max_iter=500) -> dict:
+def simulated_annealing(init, rng, t_start=100.0, alpha=0.95, t_min=1e-2) -> dict:
     init.evaluate()
     curr = init
     best = init
@@ -15,8 +15,9 @@ def simulated_annealing(init, rng, t_start=100.0, alpha=0.95, t_min=1e-2, max_it
     stuck = 0
     start = time.time()
 
-    for t in range(1, max_iter + 1):
-        temp = schedule(t, t_start, alpha)
+    turn = 1
+    while True:
+        temp = schedule(turn, t_start, alpha)
         if temp < t_min:
             break
 
@@ -32,7 +33,7 @@ def simulated_annealing(init, rng, t_start=100.0, alpha=0.95, t_min=1e-2, max_it
                     curr = neighbor
                     moved = True
                 else:
-                    p = math.exp(delta / temp) # p = exp(delta/T)
+                    p = math.exp(delta / temp)
 
                     # kalau random < p, pindah ke neighbor
                     if rng.random() < p:
@@ -47,10 +48,12 @@ def simulated_annealing(init, rng, t_start=100.0, alpha=0.95, t_min=1e-2, max_it
 
         history.append(curr.value)
         probs.append(p)
+        turn += 1
 
     return {
         "initial": init,
-        "final": best,
+        "final": curr,
+        "best": best,
         "history": history,
         "probs": probs,
         "stuck": stuck,
