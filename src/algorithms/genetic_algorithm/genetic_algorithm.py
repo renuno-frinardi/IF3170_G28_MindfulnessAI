@@ -4,24 +4,14 @@ from bisect import bisect_right
 from copy import deepcopy
 from math import isfinite
 
-from src.models.package import Package
 from src.models.state import State
-from src.models.truck import Truck
-from src.utils.neighbor import move, random_neighbor, rotate, swap
-from src.utils.state_utils import (
-    ORIENTATIONS,
-    candidate,
-    copy_state,
-    low_z,
-    random_initial_state,
-    random_orientation,
-    try_place,
-)
-from src.utils.validator import is_feasible, overlap, violations
+from src.utils.neighbor import random_neighbor
+from src.utils.state_utils import copy_state, random_initial_state
 
 
 ## STATIC VARIABLE
 MUTATION_RATE = 0.05
+MAX_MUTATION_ATTEMPTS = 10
 
 
 ## Prerequisite
@@ -102,12 +92,17 @@ def crossover(parent1: State, parent2: State) -> tuple[State,State]:
 
     return child1,child2
 
-# 4. Mutation
-def mutation(self: State, mut_point):
-    rate = random.uniform(0,100)
-    if (rate<MUTATION_RATE):
-        # Proses mengubah konfigurasi
-        self.packages = 0
+# D. Mutation
+def mutation(state: State, rng=random) -> State:
+    if not state.packages or rng.random() >= MUTATION_RATE:
+        return state
+
+    for _ in range(MAX_MUTATION_ATTEMPTS):
+        mutated = random_neighbor(state, rng=rng, tries=1)
+        if mutated is not None and isfinite(mutated.evaluate()):
+            return mutated
+
+    return state
 
     
 
@@ -141,9 +136,8 @@ def genetic_algorithm(packages, truck, pilihan, n) -> State:
                     parents[i+1] = child2
 
                 # 3. Mutation 
-                for el in parents:
-                    mut_point = random.uniform(0, len(el.packages) - 1)
-                    mutation(el,mut_point)
+                for index, individual in enumerate(parents):
+                    parents[index] = mutation(individual)
 
                 # 4. Hasil Akhir
                 new_population = parents
@@ -169,9 +163,8 @@ def genetic_algorithm(packages, truck, pilihan, n) -> State:
                     parents[i+1] = child2
 
                 # 3. Mutation 
-                for el in parents:
-                    mut_point = random.randint(0,len(el.packages)-1)
-                    mutation(el,mut_point)
+                for index, individual in enumerate(parents):
+                    parents[index] = mutation(individual)
 
                 # 4. Hasil Akhir
                     new_population = parents
