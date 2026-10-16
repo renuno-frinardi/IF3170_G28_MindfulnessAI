@@ -2,17 +2,21 @@ import math
 import time
 from ...utils.neighbor import random_neighbor
 
+# menurunkan temperatur seiring waktu
+def schedule(t, t_start, alpha):
+    return t_start * (alpha ** (t - 1))
+
 # alpha digunakan untuk memperkecil temperatur
 def simulated_annealing(init, rng, t_start=100.0, alpha=0.95, t_min=1e-2, max_iter=500) -> dict:
     init.evaluate()
     curr = init
     best = init
-    temp = t_start
     history, probs = [], []
     stuck = 0
     start = time.time()
 
-    for i in range(max_iter):
+    for t in range(1, max_iter + 1):
+        temp = schedule(t, t_start, alpha)
         if temp < t_min:
             break
 
@@ -43,7 +47,6 @@ def simulated_annealing(init, rng, t_start=100.0, alpha=0.95, t_min=1e-2, max_it
 
         history.append(curr.value)
         probs.append(p)
-        temp *= alpha
 
     return {
         "initial": init,
