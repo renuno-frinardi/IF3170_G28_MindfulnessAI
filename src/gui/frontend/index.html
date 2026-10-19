@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="id">
+ <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0D1117">
+  <link rel="icon" href="data:,">
+  <link rel="preload" href="fonts/Inter-VariableFont_opsz,wght.ttf" as="font" type="font/ttf" crossorigin>
+  <title>MindfulnessAI</title>
+  <link rel="stylesheet" href="style.css">
+ </head>
+ <body>
+  <header>
+   <div class="brand">
+    <svg class="logo" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+     <path d="M32 32 L56.2 18 A28 28 0 1 0 56.2 46 Z" fill="#FFD43B"/>
+     <circle cx="35" cy="20" r="3.2" fill="#0D1117"/>
+    </svg>
+    <div>
+     <h1>Pac-Man</h1>
+     <p>Packet Management</p>
+    </div>
+   </div>
+  </header>
+
+  <main>
+   <section class="controls" aria-label="Kontrol eksperimen">
+    <div class="toolbar">
+     <label>
+      Algoritma
+      <select id="example-select"></select>
+     </label>
+     <label>
+      Objective
+      <select id="objective-select">
+       <option value="value">O1 - Nilai Total</option>
+       <option value="eta_penalty">O2 - Nilai dengan Penalti ETA</option>
+      </select>
+     </label>
+     <button id="btn-random">Acak 40 paket</button>
+     <label>
+      Seed
+      <input id="seed" type="number" step="1" value="42" placeholder="Acak">
+     </label>
+     <label>
+      Pengulangan
+      <input id="repeats" type="number" min="1" max="10" step="1" value="3">
+     </label>
+     <button id="btn-run" class="primary">Jalankan</button>
+    </div>
+
+    <div class="toolbar">
+     <label class="saved">
+      Hasil tersimpan
+      <select id="saved-select">
+       <option value="">Belum ada hasil yang tersimpan</option>
+      </select>
+     </label>
+     <button id="btn-load">Load hasil tersimpan</button>
+     <label class="file-button">
+      Buka JSON / TXT
+      <input id="file-open" type="file" accept=".txt,.json,text/plain,application/json">
+     </label>
+    </div>
+
+    <details id="input-panel">
+     <summary>Input Files</summary>
+     <label for="input-text" class="sr-only">Teks input solver</label>
+     <textarea id="input-text" rows="9" spellcheck="false"></textarea>
+    </details>
+
+    <p id="status" role="status" aria-live="polite">Belum ada hasil yang dimuat. Pilih contoh lalu klik Jalankan atau muat hasil tersimpan.</p>
+   </section>
+
+   <div class="workspace">
+    <section class="scene panel" aria-label="Visualisasi pemuatan">
+     <div class="toolbar scene-tools">
+      <div id="state-tabs" class="tabs" aria-label="Pilihan keadaan"></div>
+      <label>
+       Warna
+       <select id="color-mode">
+        <option value="value">Value</option>
+        <option value="fragility">Fragile</option>
+       </select>
+      </label>
+     </div>
+
+     <div class="canvas-wrap">
+      <canvas id="viewer" aria-label="Pemuatan paket 3D. Seret untuk memutar; gulir untuk memperbesar." role="img"></canvas>
+      <div class="scene-hint">Drag untuk memutar · Scroll untuk memperbesar · Double click untuk mengatur ulang</div>
+     </div>
+
+     <p id="viewer-caption"></p>
+
+     <div class="toolbar">
+      <button id="btn-reset-cam">Reset kamera</button>
+      <button id="btn-png">Simpan PNG</button>
+      <span class="axis-key">x lebar · y panjang · z tinggi</span>
+     </div>
+
+    </section>
+
+    <section class="results panel" aria-label="Hasil eksperimen">
+     <div id="summary">
+      <h2>Explore hasil pemuatan</h2>
+      <p>Compare tiap pencarian, inspect tiap paket, dan export gambar</p>
+     </div>
+
+     <div class="table-scroll">
+      <table id="runs-table" aria-label="Pilih pencarian"></table>
+     </div>
+
+     <div id="run-details"></div>
+
+     <div id="chart-tabs" class="tabs" aria-label="Pilihan grafik"></div>
+
+     <div class="chart-wrap">
+      <canvas id="chart-canvas" role="img" aria-label="Belum ada grafik dipilih"></canvas>
+     </div>
+
+     <button id="btn-chart-png">Simpan grafik PNG</button>
+    </section>
+   </div>
+
+   <section class="panel packages" aria-label="Detail paket">
+    <div id="key-figures" class="figures"></div>
+    <div id="feasibility"></div>
+    <div class="table-scroll">
+     <table id="packages-table" aria-label="Semua paket"></table>
+    </div>
+   </section>
+  </main>
+
+  <footer>IF3170 . MindfulnessAI . Grup 28</footer>
+
+  <script>
+   if (location.protocol === 'file:') {
+    document.getElementById('status').textContent =
+     'Jalankan server dengan python -m src.server, lalu buka http://127.0.0.1:8000/';
+   }
+  </script>
+  <script type="module" src="main.js"></script>
+ </body>
+</html>
