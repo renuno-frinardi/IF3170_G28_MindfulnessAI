@@ -1,5 +1,5 @@
-import { createViewer } from './viewer3d.js';
-import { drawLineChart } from './charts.js';
+import { createViewer } from '../viewer3d.js';
+import { drawLineChart } from '../charts.js';
 
 const $ = id => document.getElementById(id);
 
