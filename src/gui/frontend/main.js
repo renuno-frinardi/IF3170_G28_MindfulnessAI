@@ -378,8 +378,8 @@ async function runFromInput() {
  if (seed !== null && !Number.isSafeInteger(seed)) {
   throw Error('Seed harus safe integer atau dibiarkan kosong untuk seed acak.');
  }
- if (!Number.isInteger(repeats) || repeats < 1 || repeats > 10) {
-  throw Error('Repeats harus berupa int dalam rentang 1 sampai 10 (GA selalu menjalankan 9 trials).');
+ if (!Number.isInteger(repeats) || repeats < 1) {
+  throw Error('Repeats harus berupa int minimal bernilai 1');
  }
 
  $('btn-run').disabled = true;

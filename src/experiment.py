@@ -27,7 +27,6 @@ MAX_RESTARTS = 200
 MAX_CANDIDATES = 1_000
 max_side = 10_000
 MAX_GA_CONTROL = 200
-MAX_REPEATS = 10
 
 # Parser tulisan
 def parse_text(text):
@@ -111,8 +110,6 @@ def run_experiment(problem, seed, repeats=3, source="inline", input_text=None, e
     validate_problem(problem, enforce_caps)
     if problem.algo != "GA":
         val_integer(repeats, "Repeats")
-        if enforce_caps:
-            val_cap(repeats, MAX_REPEATS, "Repeats")
     meta = make_meta(problem, seed, repeats, source, input_text)
     if problem.algo == "GA":
         runs = export.ga_run(solve(problem, seed=seed))
