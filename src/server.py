@@ -46,7 +46,7 @@ class Handler(SimpleHTTPRequestHandler):
         path = unquote(urlsplit(self.path).path)
         if path == "/":
             self.send_response(302)
-            self.send_header("Location", "/src/gui/index.html")
+            self.send_header("Location", "/src/gui/frontend/index.html")
             self.end_headers()
         elif path == "/api/results":
             files = [{"name": p.name, "size": p.stat().st_size, "modified": p.stat().st_mtime} for p in OUTPUT_DIR.glob("*.json") if p.is_file() and not p.is_symlink()]
