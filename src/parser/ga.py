@@ -3,7 +3,7 @@ from ..models.package import Package
 from ..models.truck import Truck
 from ..types.dimension import Dimension
 from ..types.orientation import Orientation
-from .helper import parse_float, parse_int, read_lines
+from .helper import parse_int, read_lines
 
 # === Format file input GA ===
 # GA
@@ -12,6 +12,7 @@ from .helper import parse_float, parse_int, read_lines
 # <n> = jumlah_populasi | banyak_iterasi
 # <m> = jumlah_package
 # <w> <l> <h> <weight> <value> [fragile] [eta]   (sebanyak m baris)
+@dataclass
 class ProblemGA:
     truck: Truck
     packages: list[Package]
@@ -83,9 +84,6 @@ def parse_ga(path: str):
         ))
 
     return ProblemGA(truck=truck, packages=packages, pilihan=pilihan, n=n)
-
-        
-
 
 # === Format file Output GA ===
 # === GA ===

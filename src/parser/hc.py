@@ -3,7 +3,7 @@ from ..models.package import Package
 from ..models.truck import Truck
 from ..types.dimension import Dimension
 from ..types.orientation import Orientation
-from .helper import parse_float, parse_int, read_lines
+from .helper import parse_int, read_lines
 
 # Deklarasi tipe jenis HC
 HC_TYPES = {"HC_STEEPEST", "HC_SIDEWAYS", "HC_STOCHASTIC", "HC_RESTART"}
