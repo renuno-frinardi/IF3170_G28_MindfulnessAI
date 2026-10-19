@@ -9,14 +9,14 @@ from ...utils.neighbor import random_neighbor
 from ...utils.state_utils import random_initial_state
 
 # Fungsi untuk satu run steepest ascent
-def steepest_ascent(current: State, rng: random.Random, num_candidates: int):
+def steepest_ascent(current: State, rng: random.Random, num_cand: int):
     current.evaluate()
     history = [current.value]
     iters = 0
     while True:
         best = None
         best_value = current.value
-        for _ in range(num_candidates):
+        for _ in range(num_cand):
             cand = random_neighbor(current, rng)
             if cand is None:
                 continue
@@ -32,7 +32,7 @@ def steepest_ascent(current: State, rng: random.Random, num_candidates: int):
     return current, iters, history
 
 # Fungsi utama untuk algirtma random restart
-def random_restart_hill_climbing(packages, truck: Truck, max_restart: int = 10, num_candidates: int = 50, seed=None) -> dict:
+def random_restart_hill_climbing(packages, truck: Truck, max_restart: int = 10, num_cand: int = 50, seed=None) -> dict:
     rng = random.Random(seed)
     start = time.perf_counter()
 
@@ -51,7 +51,7 @@ def random_restart_hill_climbing(packages, truck: Truck, max_restart: int = 10, 
             first_state = init
 
         # Memanggil inner loop untuk iterasi
-        final, iters, history = steepest_ascent(init, rng, num_candidates)
+        final, iters, history = steepest_ascent(init, rng, num_cand)
 
         iterations_per_restart.append(iters)
         all_histories.append(history)

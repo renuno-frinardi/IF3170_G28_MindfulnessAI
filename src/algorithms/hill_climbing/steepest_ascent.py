@@ -6,7 +6,7 @@ from ...models.state import State
 from ...utils.neighbor import random_neighbor
 
 # Fungsi utama hill-climbing steepest ascent
-def steepest_ascent_hill_climbing(initial_state: State, num_candidates: int = 50, seed=None) -> dict:
+def steepest_ascent_hill_climbing(initial_state: State, num_cand: int = 50, seed=None) -> dict:
     rng = random.Random(seed)
     current = initial_state
     current.evaluate()
@@ -22,7 +22,7 @@ def steepest_ascent_hill_climbing(initial_state: State, num_candidates: int = 50
         best_value = current.value
 
         # Eksplorasi random neighbor sebanyak n dan mencari yang terbaik
-        for _ in range(num_candidates):
+        for _ in range(num_cand):
             cand = random_neighbor(current, rng)
             if cand is None:
                 continue

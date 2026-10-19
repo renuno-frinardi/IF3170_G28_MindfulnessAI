@@ -7,7 +7,7 @@ from ...models.state import State
 from ...utils.neighbor import random_neighbor
 
 # Fungsi utama untuk run sideways move HC
-def sideways_move_hill_climbing(initial_state: State, num_candidates: int = 50, max_sideways: int = 100, seed=None) -> dict:
+def sideways_move_hill_climbing(initial_state: State, num_cand: int = 50, max_side: int = 100, seed=None) -> dict:
     rng = random.Random(seed)
     current = initial_state
     current.evaluate()
@@ -24,7 +24,7 @@ def sideways_move_hill_climbing(initial_state: State, num_candidates: int = 50, 
         best_value = current.value
 
         # Inner loop untuk mencari n neighbor dan memilih yang terbaik
-        for _ in range(num_candidates):
+        for _ in range(num_cand):
             cand = random_neighbor(current, rng)
             if cand is None:
                 continue
@@ -38,7 +38,7 @@ def sideways_move_hill_climbing(initial_state: State, num_candidates: int = 50, 
 
         # Iterasi terus menerus sampai mencapai batas max sideways
         if best_value == current.value:
-            if sideways_moves >= max_sideways:
+            if sideways_moves >= max_side:
                 break
             sideways_moves += 1
         else:
