@@ -12,6 +12,8 @@ from .helper import parse_int, read_lines
 # <n> = jumlah_populasi | banyak_iterasi
 # <m> = jumlah_package
 # <w> <l> <h> <weight> <value> [fragile] [eta]   (sebanyak m baris)
+
+# Data structure ProblemGA untuk menyimpan data input Genetic Algorithm
 @dataclass
 class ProblemGA:
     truck: Truck
@@ -19,6 +21,7 @@ class ProblemGA:
     pilihan: str
     n: int
 
+# Parser file input ke bentuk problemGA
 def parse_ga(path: str):
     lines = read_lines(path)
 

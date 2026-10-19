@@ -49,7 +49,7 @@ def genetic_algorithm(packages, truck, pilihan, n, seed=None) -> dict[str, objec
 def run_genetic_algorithm(population: list[State], iterations: int, rng=random) -> dict[str, object]:
 
     # 1. Menghitung wkatu mulai, ukuran populasi, dan skor fitness awal
-    started_at = perf_counter()
+    start = perf_counter()
     population_size = len(population)
     fitness_scores = [fitness_function(state) for state in population]
 
@@ -66,9 +66,9 @@ def run_genetic_algorithm(population: list[State], iterations: int, rng=random) 
     best_objective = best_state.objective_value()
 
     # 3. Menyimpan nilai maksimum dan rata-rata value dari populasi awal
-    maximum_objective, average_objective = objective_statistics(population)
-    maximum_history = [maximum_objective]
-    average_history = [average_objective]
+    maxobjective, avgobjective = objective_statistics(population)
+    maxhistory = [maxobjective]
+    avghistory = [avgobjective]
 
     for _ in range(iterations):
         # I. Selection
@@ -122,13 +122,13 @@ def run_genetic_algorithm(population: list[State], iterations: int, rng=random) 
             best_state = copy_state(generation_best)
             best_objective = generation_best_objective
 
-        maximum_objective, average_objective = objective_statistics(population)
-        maximum_history.append(maximum_objective)
-        average_history.append(average_objective)
+        maxobjective, avgobjective = objective_statistics(population)
+        maxhistory.append(maxobjective)
+        avghistory.append(avgobjective)
 
     # Hasil Akhir
     best_state.evaluate()
-    duration_seconds = perf_counter() - started_at
+    duration = perf_counter() - start
 
     return {
         "initial_state": initial_state,
@@ -136,11 +136,11 @@ def run_genetic_algorithm(population: list[State], iterations: int, rng=random) 
         "final_objective": best_objective,
         "objective_history": {
             "iteration": list(range(iterations + 1)),
-            "maximum": maximum_history,
-            "average": average_history,
+            "maximum": maxhistory,
+            "average": avghistory,
         },
         "population_size": population_size,
         "iterations": iterations,
-        "duration_seconds": duration_seconds,
+        "duration_seconds": duration,
     }
 
