@@ -5,6 +5,7 @@ from copy import deepcopy
 from math import isfinite
 
 from src.models.state import State
+from src.objective import DEFAULT_OBJECTIVE
 from src.utils.validator import violations
 from src.utils.neighbor import random_neighbor
 from src.utils.state_utils import copy_state, random_initial_state
@@ -71,8 +72,8 @@ def selection(population: list[State], fitness_scores: list[float] | None = None
     return parents
 
 # B. Initialize Population
-def init_population(n, packages, truck, rng=random):
-    return [random_initial_state(packages, truck, seed=rng.randrange(2**63)) for _ in range(n)]
+def init_population(n, packages, truck, rng=random, objective_mode=DEFAULT_OBJECTIVE):
+    return [random_initial_state(packages, truck, seed=rng.randrange(2**63), objective_mode=objective_mode) for _ in range(n)]
 
 # C. Crossover
 def crossover(parent1: State, parent2: State, rng=random) -> tuple[State, State]:
@@ -93,14 +94,16 @@ def crossover(parent1: State, parent2: State, rng=random) -> tuple[State, State]
         packages=(
             deepcopy(parent1.packages[:point]) + deepcopy(parent2.packages[point:])
         ),
-        truck=deepcopy(parent1.truck)
+        truck=deepcopy(parent1.truck),
+        objective_mode=parent1.objective_mode,
     )
 
     child2 = State(
         packages=(
             deepcopy(parent2.packages[:point]) + deepcopy(parent1.packages[point:])
         ),
-        truck=deepcopy(parent2.truck)
+        truck=deepcopy(parent2.truck),
+        objective_mode=parent2.objective_mode,
     )
 
     # 4. Validation and Return
@@ -113,7 +116,7 @@ def crossover(parent1: State, parent2: State, rng=random) -> tuple[State, State]
 
 # D. Mutation
 def mutation(state: State, rng=random) -> State:
-    # 1. Check probability 
+    # 1. Check probability
     if not state.packages or rng.random() >= MUTATION_RATE:
         return state
 

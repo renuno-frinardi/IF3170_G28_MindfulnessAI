@@ -157,12 +157,24 @@ function loadEnvelope(env) {
  validateEnvelope(env);
  app.envelope = env;
 
+ const objective = env.meta.objective;
+ const objectiveSelect = $('objective-select');
+ if (objective && objectiveSelect &&
+     [...objectiveSelect.options].some(option => option.value === objective)) {
+  objectiveSelect.value = objective;
+ }
+
  const winner = env.meta.winner_index;
  app.runIndex = Number.isInteger(winner) && winner >= 0 && winner < env.runs.length ? winner : 0;
  app.which = 'final';
  app.chartIndex = 0;
  app.highlightId = null;
  render();
+}
+
+function objectiveLabel(meta) {
+ return meta.objective_label ||
+  (meta.objective === 'eta_penalty' ? 'Nilai - Penalti ETA' : 'Nilai total');
 }
 
 function renderSummary() {
@@ -174,6 +186,7 @@ function renderSummary() {
  $('summary').replaceChildren(
   element('h2', meta.title),
   definitionList([
+   { label: 'Objective', value: objectiveLabel(meta) },
    { label: 'Parameters', value: parameters },
    { label: 'Base seed', value: meta.seed },
    { label: 'Source', value: meta.source },
@@ -268,7 +281,12 @@ function renderState() {
 
  const loaded = state.packages.filter(p => p.pos !== null).length;
  const figures = [
-  ['Value', state.value],
+  ['Objective', state.value],
+  ...(state.objective === 'eta_penalty' ? [
+   ['Base value', state.base_value],
+   ['ETA penalty', state.penalty],
+   ['Penalty count', state.penalty_count],
+  ] : []),
   ['Weight / capacity', `${format(state.weight)} / ${format(state.truck.capacity)}`],
   ['Loaded / total', `${loaded} / ${state.packages.length}`],
  ].map(([label, value]) => {
@@ -386,7 +404,7 @@ async function runFromInput() {
  status('Running. Batch genetic algorithm bisa agak lama.');
 
  try {
-  const body = JSON.stringify({ text: $('input-text').value, seed, repeats });
+  const body = JSON.stringify({text: $('input-text').value, seed, repeats, objective: $('objective-select').value,});
   if (new Blob([body]).size > 1000000) {
    throw Error('Input melebihi batas 1.000.000 byte. Gunakan input lebih kecil atau CLI.');
   }

@@ -2,6 +2,7 @@ import random
 from ..models.package import Package
 from ..models.state import State
 from ..models.truck import Truck
+from ..objective import DEFAULT_OBJECTIVE, validate_objective
 from ..types.dimension import Dimension
 from ..types.orientation import Orientation
 from ..utils.validator import is_feasible
@@ -88,10 +89,16 @@ def copy_state(state) -> State:
         state.truck.dimension.h,
     ), max_capacity=state.truck.max_capacity)
 
-    return State(new_packages, new_truck, state.value)
+    return State(
+        packages=new_packages,
+        truck=new_truck,
+        value=state.value,
+        objective_mode=state.objective_mode,
+    )
 
 # random state awal
-def random_initial_state(package, truck, seed=None, tries=10) -> State:
+def random_initial_state(package, truck, seed=None, tries=10, objective_mode=DEFAULT_OBJECTIVE) -> State:
+    objective_mode = validate_objective(objective_mode)
     rng = random.Random(seed)
     new_truck = Truck(dimension=Dimension(
         truck.dimension.w,
@@ -112,7 +119,7 @@ def random_initial_state(package, truck, seed=None, tries=10) -> State:
         )
         new_packages.append(q)
 
-    state = State(new_packages, new_truck)
+    state = State(new_packages, new_truck, objective_mode=objective_mode)
 
     order = list(range(len(new_packages)))
     rng.shuffle(order)

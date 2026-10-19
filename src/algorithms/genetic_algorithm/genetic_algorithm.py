@@ -2,6 +2,7 @@
 import random
 from time import perf_counter
 from src.models.state import State
+from src.objective import DEFAULT_OBJECTIVE
 from src.utils.state_utils import copy_state
 from .helper_ga import (
     fitness_function,
@@ -13,7 +14,7 @@ from .helper_ga import (
 )
 
 # Main
-def genetic_algorithm(packages, truck, pilihan, n, seed=None) -> dict[str, object]:
+def genetic_algorithm(packages, truck, pilihan, n, seed=None, objective_mode=DEFAULT_OBJECTIVE) -> dict[str, object]:
     rng = random.Random(seed)
     results = []
 
@@ -22,7 +23,7 @@ def genetic_algorithm(packages, truck, pilihan, n, seed=None) -> dict[str, objec
         if jumlah_populasi <= 0:
             raise ValueError("Jumlah populasi harus lebih besar dari nol")
 
-        population = init_population(jumlah_populasi, packages, truck, rng=rng)
+        population = init_population(jumlah_populasi, packages, truck, rng=rng, objective_mode=objective_mode)
 
         for _ in range(3):
             iteration = rng.randint(1, 100)
@@ -35,7 +36,7 @@ def genetic_algorithm(packages, truck, pilihan, n, seed=None) -> dict[str, objec
 
         for _ in range(3):
             jumlah_populasi = rng.randint(1, 100)
-            population = init_population(jumlah_populasi, packages, truck, rng=rng)
+            population = init_population(jumlah_populasi, packages, truck, rng=rng, objective_mode=objective_mode)
             for _ in range(3):
                 results.append(run_genetic_algorithm(population, iteration, rng=rng))
 

@@ -8,6 +8,7 @@ from .algorithms.hill_climbing.steepest_ascent import steepest_ascent_hill_climb
 from .algorithms.hill_climbing.stochastic import stochastic_hill_climbing
 from .algorithms.simulated_annealing.simulated_annealing import simulated_annealing
 from .models.state import State
+from .objective import DEFAULT_OBJECTIVE, validate_objective
 from .parser.main import Problem
 from .utils.state_utils import random_initial_state
 
@@ -32,18 +33,19 @@ class SolveResult:
 def clean(history) -> list[float | None]: # nilai -inf diubah jadi None
     return [None if (isinstance(v, float) and math.isinf(v) and v < 0) else v for v in history]
 
-def solve(parsed: Problem, seed: int | None = None) -> SolveResult:
+def solve(parsed: Problem, seed: int | None = None, objective_mode: str = DEFAULT_OBJECTIVE) -> SolveResult:
+    objective_mode = validate_objective(objective_mode)
     if parsed.algo == "SA":
-        return solve_sa(parsed.problem, seed)
+        return solve_sa(parsed.problem, seed, objective_mode)
     if parsed.algo == "GA":
-        return solve_ga(parsed.problem, seed)
+        return solve_ga(parsed.problem, seed, objective_mode)
     if parsed.algo == "HC":
-        return solve_hc(parsed.problem, seed)
+        return solve_hc(parsed.problem, seed, objective_mode)
     raise ValueError(f"Algoritma tidak dikenal: '{parsed.algo}'")
 
-def solve_sa(problem, seed) -> SolveResult:
+def solve_sa(problem, seed, objective_mode: str = DEFAULT_OBJECTIVE) -> SolveResult:
     rng = random.Random(seed)
-    init = random_initial_state(problem.packages, problem.truck, seed=seed)
+    init = random_initial_state(problem.packages, problem.truck, seed=seed, objective_mode=objective_mode)
     res = simulated_annealing(init, rng, problem.params.t_start, problem.params.alpha, problem.params.t_min)
 
     history = res["history"]
@@ -63,8 +65,8 @@ def solve_sa(problem, seed) -> SolveResult:
         },
     )
 
-def solve_ga(problem, seed) -> SolveResult:
-    res = genetic_algorithm(problem.packages, problem.truck, problem.pilihan, problem.n, seed=seed)
+def solve_ga(problem, seed, objective_mode: str = DEFAULT_OBJECTIVE) -> SolveResult:
+    res = genetic_algorithm(problem.packages, problem.truck, problem.pilihan, problem.n, seed=seed, objective_mode=objective_mode)
     results = res["results"]
     if not results:
         raise ValueError("GA tidak menghasilkan solusi")
@@ -91,7 +93,7 @@ def solve_ga(problem, seed) -> SolveResult:
         },
     )
 
-def solve_hc(problem, seed) -> SolveResult:
+def solve_hc(problem, seed, objective_mode: str = DEFAULT_OBJECTIVE) -> SolveResult:
     hc_type = problem.hc_type
     if hc_type not in HC_ALGORITHMS:
         raise ValueError(f"Tipe HC tidak dikenal: '{hc_type}'")
@@ -100,9 +102,9 @@ def solve_hc(problem, seed) -> SolveResult:
     params = asdict(problem.params)
 
     if hc_type == "HC_RESTART":
-        res = algo(problem.packages, problem.truck, **params, seed=seed)
+        res = algo(problem.packages, problem.truck, **params, seed=seed, objective_mode=objective_mode)
     else:
-        init = random_initial_state(problem.packages, problem.truck, seed=seed)
+        init = random_initial_state(problem.packages, problem.truck, seed=seed, objective_mode=objective_mode)
         res = algo(init, **params, seed=seed)
 
     extra = {}

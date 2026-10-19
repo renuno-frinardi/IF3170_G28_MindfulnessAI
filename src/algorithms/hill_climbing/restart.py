@@ -5,6 +5,7 @@ import random
 import time
 from ...models.state import State
 from ...models.truck import Truck
+from ...objective import DEFAULT_OBJECTIVE
 from ...utils.neighbor import random_neighbor
 from ...utils.state_utils import random_initial_state
 
@@ -32,7 +33,7 @@ def steepest_ascent(current: State, rng: random.Random, num_cand: int):
     return current, iters, history
 
 # Fungsi utama untuk algirtma random restart
-def random_restart_hill_climbing(packages, truck: Truck, max_restart: int = 10, num_cand: int = 50, seed=None) -> dict:
+def random_restart_hill_climbing(packages, truck: Truck, max_restart: int = 10, num_cand: int = 50, seed=None, objective_mode=DEFAULT_OBJECTIVE) -> dict:
     rng = random.Random(seed)
     start = time.perf_counter()
 
@@ -46,7 +47,7 @@ def random_restart_hill_climbing(packages, truck: Truck, max_restart: int = 10, 
     # Outer loop sebagai maksimum random restart
     for _ in range(max_restart):
         restart_seed = rng.randint(0, 2**31 - 1)
-        init = random_initial_state(packages, truck, seed=restart_seed)
+        init = random_initial_state(packages, truck, seed=restart_seed, objective_mode=objective_mode)
         if first_state is None:
             first_state = init
 

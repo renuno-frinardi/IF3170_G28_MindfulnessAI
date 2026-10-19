@@ -13,6 +13,7 @@ import re
 import sys
 import tempfile
 from src import export
+from src.objective import DEFAULT_OBJECTIVE, OBJECTIVES, objective_label, validate_objective
 from src.parser.main import parse
 from src.solver import solve
 
@@ -91,12 +92,13 @@ def validate_problem(problem, enforce_caps=True):
         raise ValueError(f"Algoritma tidak dikenal: {problem.algo}")
 
 # Membuat header metadata
-def make_meta(problem, seed, repeats, source, input_text):
+def make_meta(problem, seed, repeats, source, input_text, objective=DEFAULT_OBJECTIVE):
     p = problem.problem
     variant = p.hc_type if problem.algo == "HC" else None
     return {
         "title": f"Hill climbing: {variant.removeprefix('HC_').lower().replace('_', ' ')}" if variant else {"SA": "Simulated annealing", "GA": "Genetic algorithm"}[problem.algo],
         "algo": problem.algo, "variant": variant, "seed": seed,
+        "objective": objective, "objective_label": objective_label(objective),
         "repeats": None if problem.algo == "GA" else repeats,
         "params": {"pilihan": p.pilihan, "n": p.n} if problem.algo == "GA" else asdict(p.params),
         "source": source, "created_at": datetime.now().astimezone().isoformat(timespec="seconds"),
@@ -104,21 +106,22 @@ def make_meta(problem, seed, repeats, source, input_text):
     }
 
 # Menjalankan proses
-def run_experiment(problem, seed, repeats=3, source="inline", input_text=None, enforce_caps=True):
+def run_experiment(problem, seed, repeats=3, source="inline", input_text=None, enforce_caps=True, objective=DEFAULT_OBJECTIVE):
     if type(seed) is not int:
         raise ValueError("Seed harus berupa integer.")
+    objective = validate_objective(objective)
     validate_problem(problem, enforce_caps)
     if problem.algo != "GA":
         val_integer(repeats, "Repeats")
-    meta = make_meta(problem, seed, repeats, source, input_text)
+    meta = make_meta(problem, seed, repeats, source, input_text, objective)
     if problem.algo == "GA":
-        runs = export.ga_run(solve(problem, seed=seed))
+        runs = export.ga_run(solve(problem, seed=seed, objective_mode=objective))
         meta.update(pilihan=problem.problem.pilihan, control_value=problem.problem.n,
                     winner_index=max(range(len(runs)), key=lambda i: runs[i]["final_value"]))
     else:
         runs = []
         for i in range(repeats):
-            result = solve(problem, seed=seed + i)
+            result = solve(problem, seed=seed + i, objective_mode=objective)
             label, params = f"Run {i + 1}", problem.problem.params
             if problem.algo == "SA":
                 run = export.sa_run(result, label, seed + i, params)
@@ -132,9 +135,11 @@ def save_envelope(envelope, out_dir=OUTPUT_DIR):
     meta = envelope["meta"]
     label = meta["variant"] or (f"GA_{meta['pilihan']}" if meta["algo"] == "GA" else meta["algo"])
     source = re.sub(r"[^A-Za-z0-9_-]", "_", Path(meta["source"]).stem) or "inline"
+    objective = meta.get("objective", DEFAULT_OBJECTIVE)
+    suffix = "" if objective == DEFAULT_OBJECTIVE else f"_{objective}"
     directory = Path(out_dir)
     directory.mkdir(parents=True, exist_ok=True)
-    target = directory / f"{label}_{source}_seed{meta['seed']}.json"
+    target = directory / f"{label}{suffix}_{source}_seed{meta['seed']}.json"
     contents = {target: json.dumps(envelope, allow_nan=False, indent=2) + "\n",
                 target.with_suffix(".txt"): export.report_text(envelope)}
     staged = []
@@ -160,10 +165,11 @@ def main(argv=None):
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--out", type=Path, default=OUTPUT_DIR)
     parser.add_argument("--no-caps", action="store_true", help="Allow larger offline runs; safety checks remain")
+    parser.add_argument("--objective", choices=tuple(OBJECTIVES), default=DEFAULT_OBJECTIVE, help="Objective function yang dipakai")
     args = parser.parse_args(argv)
     try:
         text = args.input.read_text(encoding="utf-8")
-        envelope = run_experiment(parse_text(text), args.seed, args.repeats, args.input.stem, text, enforce_caps=not args.no_caps)
+        envelope = run_experiment(parse_text(text), args.seed, args.repeats, args.input.stem, text, enforce_caps=not args.no_caps, objective=args.objective)
         saved = save_envelope(envelope, args.out)
         print(saved)
         print(saved.with_suffix(".txt"))

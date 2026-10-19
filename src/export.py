@@ -72,11 +72,17 @@ def state_to_dict(state, context="State"):
         # Pengecekan validasi akhir
         location = "state validation"
         errors = violations(state)
+        objective = state.objective_details()
 
         # Mengembalikan nilai
         return {
             "truck": dict(zip(("w", "l", "h", "capacity"), [*size, truck.max_capacity])),
-            "packages": packages, "value": state.objective_value(),
+            "packages": packages, "value": objective["value"],
+            "base_value": objective["base_value"],
+            "penalty_total": objective["penalty_total"],
+            "penalty_count": objective["penalty_count"],
+            "penalty": objective["penalty"],
+            "objective": objective["objective"],
             "weight": sum(p.weight for p in state.packages if p.is_inside),
             "feasible": not errors, "violations": errors,
         }
@@ -86,7 +92,7 @@ def state_to_dict(state, context="State"):
         raise ExportError(f"Cannot export {context}, {location}: {exc}") from exc
 
 # Fungsi untuk mengecek setiap titik x ada titik y yang mendampinginya
-def line_chart(title, x_label, lines, y_label="Total nilai dari paket yang diload"):
+def line_chart(title, x_label, lines, y_label="Nilai objective dari paket yang diload"):
     if any(len(line["x"]) != len(line["y"]) for line in lines):
         raise ExportError(f"Grafik {title!r}: x/y memiliki perbedaan jumlah")
     return {"title": title, "x_label": x_label, "y_label": y_label, "lines": lines}
@@ -205,7 +211,9 @@ def state_text(state):
 
 # Mengembalikan laporan
 def report_text(envelope):
-    lines = [envelope["meta"]["title"], ""]
+    meta = envelope["meta"]
+    objective = meta.get("objective_label") or meta.get("objective", "value")
+    lines = [meta["title"], f"Objective: {objective}", ""]
     for run in envelope["runs"]:
         lines.extend([run["label"], "=" * len(run["label"])])
         for key, title in (("init", "Initial state"), ("final", "Final state")):

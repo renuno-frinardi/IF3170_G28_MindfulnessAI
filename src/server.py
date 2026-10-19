@@ -9,6 +9,7 @@ import threading
 import traceback
 from urllib.parse import unquote, urlsplit
 from src.experiment import OUTPUT_DIR, REPO_ROOT, parse_text, run_experiment, save_envelope
+from src.objective import DEFAULT_OBJECTIVE
 
 # Definisi variabel global
 RUN_LOCK = threading.Lock()
@@ -95,7 +96,7 @@ class Handler(SimpleHTTPRequestHandler):
             return
         try:
             if self.headers.get_content_type() != "application/json":
-                raise ValueError("Send application/json with text, seed and repeats.")
+                raise ValueError("Send application/json with text, seed, repeats and optional objective.")
             size = int(self.headers.get("Content-Length", "0"))
             if size > MAX_BODY:
                 self.connection.settimeout(2)
@@ -115,7 +116,8 @@ class Handler(SimpleHTTPRequestHandler):
             if seed is None:
                 seed = random.SystemRandom().randrange(2**31)
             problem = parse_text(data.get("text"))
-            envelope = run_experiment(problem, seed, data.get("repeats", 3), input_text=data["text"])
+            objective = data.get("objective", DEFAULT_OBJECTIVE)
+            envelope = run_experiment(problem, seed, data.get("repeats", 3), input_text=data["text"], objective=objective)
             saved = save_envelope(envelope)
             self.json_response(200, {"saved_as": saved.relative_to(REPO_ROOT).as_posix(),
                                      "saved_txt": saved.with_suffix(".txt").relative_to(REPO_ROOT).as_posix(),
