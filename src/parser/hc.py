@@ -11,13 +11,13 @@ HC_TYPES = {"HC_STEEPEST", "HC_SIDEWAYS", "HC_STOCHASTIC", "HC_RESTART"}
 # Parameter unik untuk Steepest Ascent
 @dataclass
 class SteepestParams:
-    num_candidates: int = 50
+    num_cand: int = 50
 
 # Parameter unik untuk Sideways HC
 @dataclass
 class SidewaysParams:
-    num_candidates: int = 50
-    max_sideways: int = 100
+    num_cand: int = 50
+    max_side: int = 100
 
 # Parameter unik untuk Stochastic HC
 @dataclass
@@ -28,7 +28,7 @@ class StochasticParams:
 @dataclass
 class RestartParams:
     max_restart: int = 10
-    num_candidates: int = 50
+    num_cand: int = 50
 
 # Parameter general untuk seluruh HC
 @dataclass
@@ -127,16 +127,16 @@ def parse_steepest_params(rest: list[tuple[int, str]]) -> SteepestParams:
         return SteepestParams()
 
     if len(rest) > 1:
-        raise ValueError(f"Baris {rest[1][0]}: baris berlebih untuk HC_STEEPEST. " f"Parameter cukup 1 baris: 'num_candidates'.")
+        raise ValueError(f"Baris {rest[1][0]}: baris berlebih untuk HC_STEEPEST. " f"Parameter cukup 1 baris: 'num_cand'.")
 
     no, text = rest[0]
     parts = text.split()
     if len(parts) != 1:
-        raise ValueError(f"Baris {no}: HC_STEEPEST butuh 1 parameter 'num_candidates', " f"dapat {len(parts)}.")
-    num_candidates = parse_int(parts[0], no, "num_candidates")
-    if num_candidates <= 0:
-        raise ValueError(f"Baris {no}: num_candidates harus > 0.")
-    return SteepestParams(num_candidates=num_candidates)
+        raise ValueError(f"Baris {no}: HC_STEEPEST butuh 1 parameter 'num_cand', " f"dapat {len(parts)}.")
+    num_cand = parse_int(parts[0], no, "num_cand")
+    if num_cand <= 0:
+        raise ValueError(f"Baris {no}: num_cand harus > 0.")
+    return SteepestParams(num_cand=num_cand)
 
 # Parser untuk sideways param
 def parse_sideways_params(rest: list[tuple[int, str]]) -> SidewaysParams:
@@ -144,21 +144,21 @@ def parse_sideways_params(rest: list[tuple[int, str]]) -> SidewaysParams:
         return SidewaysParams()
 
     if len(rest) > 1:
-        raise ValueError(f"Baris {rest[1][0]}: baris berlebih untuk HC_SIDEWAYS. " f"Parameter cukup 1 baris: 'num_candidates max_sideways'.")
+        raise ValueError(f"Baris {rest[1][0]}: baris berlebih untuk HC_SIDEWAYS. " f"Parameter cukup 1 baris: 'num_cand max_side'.")
 
     no, text = rest[0]
     parts = text.split()
     if len(parts) != 2:
-        raise ValueError(f"Baris {no}: HC_SIDEWAYS butuh 2 parameter " f"'num_candidates max_sideways', dapat {len(parts)}.")
-    num_candidates = parse_int(parts[0], no, "num_candidates")
-    max_sideways = parse_int(parts[1], no, "max_sideways")
+        raise ValueError(f"Baris {no}: HC_SIDEWAYS butuh 2 parameter " f"'num_cand max_side', dapat {len(parts)}.")
+    num_cand = parse_int(parts[0], no, "num_cand")
+    max_side = parse_int(parts[1], no, "max_side")
 
-    if num_candidates <= 0:
-        raise ValueError(f"Baris {no}: num_candidates harus > 0.")
-    if max_sideways <= 0:
-        raise ValueError(f"Baris {no}: max_sideways harus > 0.")
+    if num_cand <= 0:
+        raise ValueError(f"Baris {no}: num_cand harus > 0.")
+    if max_side <= 0:
+        raise ValueError(f"Baris {no}: max_side harus > 0.")
 
-    return SidewaysParams(num_candidates=num_candidates, max_sideways=max_sideways)
+    return SidewaysParams(num_cand=num_cand, max_side=max_side)
 
 # Parser untuk stochastic param
 def parse_stochastic_params(rest: list[tuple[int, str]]) -> StochasticParams:
@@ -183,18 +183,18 @@ def parse_restart_params(rest: list[tuple[int, str]]) -> RestartParams:
         return RestartParams()
 
     if len(rest) > 1:
-        raise ValueError(f"Baris {rest[1][0]}: baris berlebih untuk HC_RESTART. " f"Parameter cukup 1 baris: 'max_restart num_candidates'.")
+        raise ValueError(f"Baris {rest[1][0]}: baris berlebih untuk HC_RESTART. " f"Parameter cukup 1 baris: 'max_restart num_cand'.")
 
     no, text = rest[0]
     parts = text.split()
     if len(parts) != 2:
-        raise ValueError(f"Baris {no}: HC_RESTART butuh 2 parameter " f"'max_restart num_candidates', dapat {len(parts)}.")
+        raise ValueError(f"Baris {no}: HC_RESTART butuh 2 parameter " f"'max_restart num_cand', dapat {len(parts)}.")
     max_restart = parse_int(parts[0], no, "max_restart")
-    num_candidates = parse_int(parts[1], no, "num_candidates")
+    num_cand = parse_int(parts[1], no, "num_cand")
 
     if max_restart <= 0:
         raise ValueError(f"Baris {no}: max_restart harus > 0.")
-    if num_candidates <= 0:
-        raise ValueError(f"Baris {no}: num_candidates harus > 0.")
+    if num_cand <= 0:
+        raise ValueError(f"Baris {no}: num_cand harus > 0.")
 
-    return RestartParams(max_restart=max_restart, num_candidates=num_candidates)
+    return RestartParams(max_restart=max_restart, num_cand=num_cand)
