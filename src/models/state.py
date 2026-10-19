@@ -10,7 +10,7 @@ class State:
     value : float = 0.0
 
     def objective_value(self) -> float:
-        return  float(sum(p.value for p in self.packages if p.is_inside))
+        return float(sum(p.value for p in self.packages if p.is_inside))
 
     def evaluate(self) -> float:
         # melanggar aturan
