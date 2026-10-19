@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0D1117">
+  <link rel="icon" href="data:,">
   <link rel="preload" href="fonts/Inter-VariableFont_opsz,wght.ttf" as="font" type="font/ttf" crossorigin>
   <title>MindfulnessAI</title>
   <link rel="stylesheet" href="style.css">
@@ -26,7 +27,7 @@
    <section class="controls" aria-label="Kontrol eksperimen">
     <div class="toolbar">
      <label>
-      Contoh
+      Algoritma
       <select id="example-select"></select>
      </label>
      <button id="btn-random">Acak 40 paket</button>
@@ -81,6 +82,8 @@
       <canvas id="viewer" aria-label="Pemuatan paket 3D. Seret untuk memutar; gulir untuk memperbesar." role="img"></canvas>
       <div class="scene-hint">Drag untuk memutar · Scroll untuk memperbesar · Double click untuk mengatur ulang</div>
      </div>
+
+     <p id="viewer-caption"></p>
 
      <div class="toolbar">
       <button id="btn-reset-cam">Reset kamera</button>
