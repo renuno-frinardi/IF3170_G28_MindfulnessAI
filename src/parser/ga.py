@@ -1,13 +1,13 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from ..models.package import Package
 from ..models.truck import Truck
 from ..types.dimension import Dimension
 from ..types.orientation import Orientation
-from .helper import parse_int, read_lines
+from .helper import parse_int, parse_trucks, read_lines
 
 # === Format file input GA ===
 # GA
-# <W> <L> <H> <capacity>
+# <W> <L> <H> <capacity> (1 atau beberapa baris untuk multi-truk)
 # <pilihan> = 'jumlah_populasi' | 'banyak_iterasi'
 # <n> = jumlah_populasi | banyak_iterasi
 # <m> = jumlah_package
@@ -20,6 +20,7 @@ class ProblemGA:
     packages: list[Package]
     pilihan: str
     n: int
+    trucks: list[Truck] = field(default_factory=list)
 
 # Parser file input ke bentuk problemGA
 def parse_ga(path: str):
@@ -28,36 +29,34 @@ def parse_ga(path: str):
     if len(lines) < 3 or lines[0][1] != "GA":
         raise ValueError("Baris pertama harus 'GA', lalu baris truk dan n")
 
-    # Baris Truk: W L H capacity
-    no, text = lines[1]
-    parts = text.split()
-    if len(parts) != 4:
-        raise ValueError(f"Baris {no}: baris truk butuh 4 angka 'W L H capacity'")
-    
-    w, l, h, cap = [parse_int(p, no, name) for p, name in zip(parts, ("W", "L", "H", "capacity"))]
-    if min(w, l, h, cap) <= 0:
-        raise ValueError(f"Baris {no}: W, L, H, capacity harus > 0")
-    truck = Truck(Dimension(w, l, h), cap)
+    # Membaca satu atau beberapa baris truk
+    trucks, next_idx = parse_trucks(lines, 1)
+    truck = trucks[0]
+
+    if next_idx + 2 >= len(lines):
+        raise ValueError("Input GA membutuhkan data truk, mode, nilai kontrol, dan jumlah paket")
 
     # Pilihan dan n
-    text = lines[2][1]
+    text = lines[next_idx][1]
     if (text.startswith("jumlah_populasi")):
         pilihan = "jumlah_populasi"
-        n = parse_int(lines[3][1], lines[3][0], "jumlah_populasi")
+        n = parse_int(lines[next_idx + 1][1], lines[next_idx + 1][0], "jumlah_populasi")
     elif (text.startswith("banyak_iterasi")):
         pilihan = "banyak_iterasi"
-        n = parse_int(lines[3][1], lines[3][0], "banyak_iterasi")
+        n = parse_int(lines[next_idx + 1][1], lines[next_idx + 1][0], "banyak_iterasi")
     else:
-        raise ValueError(f"Baris {lines[2][0]}: pilihan tidak valid. Harus 'jumlah_populasi' atau 'banyak_iterasi'")
+        raise ValueError(f"Baris {lines[next_idx][0]}: pilihan tidak valid. Harus 'jumlah_populasi' atau 'banyak_iterasi'")
 
     # m
-    text = lines[4][1]
-    m = parse_int(text, lines[4][0], "jumlah_package")
+    m_idx = next_idx + 2
+    text = lines[m_idx][1]
+    m = parse_int(text, lines[m_idx][0], "jumlah_package")
     if m <= 0:
-        raise ValueError(f"Baris {lines[4][0]}: jumlah_package harus > 0")
+        raise ValueError(f"Baris {lines[m_idx][0]}: jumlah_package harus > 0")
 
     # Packages
-    pkg_lines = lines[5:5 + m]
+    pkg_start = m_idx + 1
+    pkg_lines = lines[pkg_start : pkg_start + m]
     if len(pkg_lines) < m:
         raise ValueError(f"Butuh {m} baris paket, dapat {len(pkg_lines)}")
 
@@ -86,27 +85,4 @@ def parse_ga(path: str):
             eta=eta,
         ))
 
-    return ProblemGA(truck=truck, packages=packages, pilihan=pilihan, n=n)
-
-# === Format file Output GA ===
-# === GA ===
-# <W> <L> <H> <capacity>
-# Durasi Pencarian: <duration>
-# Banyak iterasi: <iterations>
-# Plot Nilai Objective Function
-# <Plot>
-
-# == Percobaan 1 == 
-# Banyak iterasi: <iterations>
-# Jumlah Populasi: <population_size>
-# State awal: <initial_state>
-# State akhir: <final_state>
-# Nilai Objective Function Akhir: <final_objective_value>
-
-# === Percobaan 2 ===
-# === Percobaan 3 ===
-# ...
-# === Percobaan 9 ===
-
-def output_ga(path: str):
-    pass
+    return ProblemGA(truck=truck, packages=packages, pilihan=pilihan, n=n, trucks=trucks)

@@ -3,7 +3,7 @@ from ..models.package import Package
 from ..models.truck import Truck
 from ..types.dimension import Dimension
 from ..types.orientation import Orientation
-from .helper import parse_int, read_lines
+from .helper import parse_int, parse_trucks, read_lines
 
 # Deklarasi tipe jenis HC
 HC_TYPES = {"HC_STEEPEST", "HC_SIDEWAYS", "HC_STOCHASTIC", "HC_RESTART"}
@@ -37,11 +37,12 @@ class ProblemHC:
     truck: Truck
     packages: list[Package]
     params: SteepestParams | SidewaysParams | StochasticParams | RestartParams
+    trucks: list[Truck] = field(default_factory=list)
 
 # === Format file input HC ===
 #
 # HC_STEEPEST | HC_SIDEWAYS | HC_STOCHASTIC | HC_RESTART
-# <W> <L> <H> <capacity>
+# <W> <L> <H> <capacity> (1 atau beberapa baris untuk multi-truk)
 # <m>
 # <w> <l> <h> <weight> <value> [fragile] [eta] (sebanyak m baris)
 # [parameter opsional]
@@ -66,24 +67,22 @@ def parse_hc(path: str) -> ProblemHC:
     if hc_type not in HC_TYPES:
         raise ValueError(f"Baris {no0}: tipe HC tidak dikenal '{hc_type}'. " f"Pilihan: {', '.join(sorted(HC_TYPES))}")
 
-    # Memastikan dimensi truk sesuai
-    no1, text1 = lines[1]
-    parts1 = text1.split()
-    if len(parts1) != 4:
-        raise ValueError(f"Baris {no1}: baris truk butuh 4 angka 'W L H capacity', " f"dapat {len(parts1)}.")
-    w, l, h, cap = [parse_int(p, no1, name) for p, name in zip(parts1, ("W", "L", "H", "capacity"))]
-    if min(w, l, h, cap) <= 0:
-        raise ValueError(f"Baris {no1}: W, L, H, capacity harus > 0.")
-    truck = Truck(Dimension(w, l, h), cap)
+    # Membaca satu atau beberapa baris truk
+    trucks, next_idx = parse_trucks(lines, 1)
+    truck = trucks[0]
+
+    if next_idx >= len(lines):
+        raise ValueError("File tidak memiliki baris jumlah paket m setelah daftar truk.")
 
     # Memastikan jumlah paket sesuai
-    no2, text2 = lines[2]
+    no2, text2 = lines[next_idx]
     m = parse_int(text2, no2, "m")
     if m <= 0:
         raise ValueError(f"Baris {no2}: jumlah paket m harus > 0.")
 
     # Memastikan terdapat m baris yang sesuai
-    pkg_lines = lines[3 : 3 + m]
+    pkg_start = next_idx + 1
+    pkg_lines = lines[pkg_start : pkg_start + m]
     if len(pkg_lines) < m:
         raise ValueError(f"Butuh {m} baris paket, tetapi hanya tersedia {len(pkg_lines)}.")
 
@@ -112,10 +111,10 @@ def parse_hc(path: str) -> ProblemHC:
         ))
 
     # Parse param
-    rest = lines[3 + m :]
+    rest = lines[pkg_start + m :]
     params = parse_params(hc_type, rest)
 
-    return ProblemHC(hc_type=hc_type, truck=truck, packages=packages, params=params)
+    return ProblemHC(hc_type=hc_type, truck=truck, packages=packages, params=params, trucks=trucks)
 
 
 # Urutan parameter opsional di baris terakhir, disesuaikan dengan jenis HC, memakai default param jika tidak ada

@@ -1,9 +1,9 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from ..models.package import Package
 from ..models.truck import Truck
 from ..types.dimension import Dimension
 from ..types.orientation import Orientation
-from .helper import parse_float, parse_int, read_lines
+from .helper import parse_float, parse_int, parse_trucks, read_lines
 
 @dataclass
 class SAParams:
@@ -16,10 +16,11 @@ class ProblemSA:
     truck: Truck
     packages: list[Package]
     params: SAParams
+    trucks: list[Truck] = field(default_factory=list)
 
 # === Format file SA ===
 # SA
-# <W> <L> <H> <capacity>
+# <W> <L> <H> <capacity> (1 atau beberapa baris untuk multi-truk)
 # <n>
 # <w> <l> <h> <weight> <value> [fragile] [eta]   (sebanyak n baris)
 # <t_start> <alpha> <t_min>   (opsional, 1 baris)
@@ -29,25 +30,22 @@ def parse_sa(path: str) -> ProblemSA:
     if len(lines) < 3 or lines[0][1] != "SA":
         raise ValueError("Baris pertama harus 'SA', lalu baris truk dan n")
 
-    # Baris Truk: W L H capacity
-    no, text = lines[1]
-    parts = text.split()
-    if len(parts) != 4:
-        raise ValueError(f"Baris {no}: baris truk butuh 4 angka 'W L H capacity'")
-    
-    w, l, h, cap = [parse_int(p, no, name) for p, name in zip(parts, ("W", "L", "H", "capacity"))]
-    if min(w, l, h, cap) <= 0:
-        raise ValueError(f"Baris {no}: W, L, H, capacity harus > 0")
-    truck = Truck(Dimension(w, l, h), cap)
+    # Membaca satu atau beberapa baris truk
+    trucks, next_idx = parse_trucks(lines, 1)
+    truck = trucks[0]
+
+    if next_idx >= len(lines):
+        raise ValueError("File tidak memiliki baris jumlah paket n setelah daftar truk")
 
     # n
-    no, text = lines[2]
+    no, text = lines[next_idx]
     n = parse_int(text, no, "n")
     if n <= 0:
         raise ValueError(f"Baris {no}: n harus > 0")
 
     # Paket
-    pkg_lines = lines[3:3 + n]
+    pkg_start = next_idx + 1
+    pkg_lines = lines[pkg_start : pkg_start + n]
     if len(pkg_lines) < n:
         raise ValueError(f"Butuh {n} baris paket, dapat {len(pkg_lines)}")
 
@@ -78,7 +76,7 @@ def parse_sa(path: str) -> ProblemSA:
 
     # Params (opsional)
     params = SAParams()
-    rest = lines[3 + n:]
+    rest = lines[pkg_start + n :]
 
     if len(rest) > 1:
         raise ValueError(f"Baris {rest[1][0]}: baris berlebih, params cukup 1 baris")
@@ -98,4 +96,4 @@ def parse_sa(path: str) -> ProblemSA:
         
         params = SAParams(t_start, alpha, t_min)
 
-    return ProblemSA(truck, packages, params)
+    return ProblemSA(truck=truck, packages=packages, params=params, trucks=trucks)
