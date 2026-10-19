@@ -10,6 +10,14 @@
 | Valentino Daniel Kusumo | 13524104 |
 | Leonardus Brain Fatolosja | 13524146 |
 
+# Pembagian Tugas
+
+| **NAMA - NIM** | **TUGAS** |
+|---|---|
+| Renuno Yuqa Frinardi - 13524080 | Laporan, Membuat algoritma Hill Climbing, bonus *objective function*, *parser* Hill Climbing, dan *backend*. |
+| Valentino Daniel Kusumo - 13524104 | Laporan, Membuat tipe data, *utils function*, *parser*, algoritma *Simulated Annealing*, dan *frontend*. |
+| Leonardus Brain Fatolosja - 13524146 | Laporan, Membuat algoritma *Genetic Algorithm*, GUI (3D View dan Chart), dan *parser*. |
+
 ## Fitur & Implementasi Program
 
 - **Algoritma Pencarian Lokal (*Local Search*)**:
