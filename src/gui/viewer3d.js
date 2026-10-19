@@ -97,23 +97,46 @@ export function createViewer(canvas) {
     function resetCamera() { 
         yaw=-1; pitch=.45; distance=diagonal*1.6; dirty(); 
     }
+
+    // Fungsi untuk mendapatkan informasi truk dari state
+    function getTrucks(st) {
+        const list = st?.trucks?.length ? st.trucks : (st?.truck ? [st.truck] : []);
+        const trucks = [];
+        let curX = 0;
+        for (let i = 0; i < list.length; i++) {
+            const t = list[i];
+            trucks.push({ w: t.w, l: t.l, h: t.h, offsetX: curX });
+            const gap = list.length === 1 ? Math.max(1, .15 * t.w) : Math.max(1.5, .2 * t.w);
+            curX += t.w + gap;
+        }
+        return { trucks, stagingX: curX };
+    }
     function setState(next, opts={}) {
         const changed = next !== state;
         state=next; mode=opts.colorMode ?? mode; highlight=opts.highlightId ?? null;
         if (!changed) { dirty(); return; }
         boxes=[];
         if (!state) { dirty(); return; }
-        const {w,l,h}=state.truck;
-        let x=w+Math.max(1,.15*w), y=0, columnWidth=0;
+        const { trucks, stagingX } = getTrucks(state);
+        const maxL = Math.max(1, ...trucks.map(t => t.l));
+        let x=stagingX, y=0, columnWidth=0;
         for (const p of state.packages) {
             let min=p.pos;
             if (min===null) {
-            if (y>0 && y+p.dims[1]>Math.max(l,1)) { x+=columnWidth+.5; y=0; columnWidth=0; }
-            min=[x,y,0]; y+=p.dims[1]+.5; columnWidth=Math.max(columnWidth,p.dims[0]);
+                if (y>0 && y+p.dims[1]>maxL) { x+=columnWidth+.5; y=0; columnWidth=0; }
+                min=[x,y,0]; y+=p.dims[1]+.5; columnWidth=Math.max(columnWidth,p.dims[0]);
+            } else {
+                const tIdx = Math.max(0, Math.min(trucks.length - 1, (p.truck ?? 1) - 1));
+                const ox = trucks[tIdx]?.offsetX ?? 0;
+                min = [p.pos[0] + ox, p.pos[1], p.pos[2]];
             }
             boxes.push({id:p.id,min,size:p.dims,value:p.value,fragile:p.fragile,loaded:p.pos!==null});
         }
-        const minimum=[0,0,0], maximum=[w,l,h];
+        const minimum=[0,0,0], maximum=[
+            Math.max(...trucks.map(t => t.offsetX + t.w)),
+            Math.max(...trucks.map(t => t.l)),
+            Math.max(...trucks.map(t => t.h)),
+        ];
         for (const b of boxes) for (let i=0;i<3;i++) {
             minimum[i]=Math.min(minimum[i],b.min[i]); maximum[i]=Math.max(maximum[i],b.min[i]+b.size[i]);
         }
@@ -131,7 +154,7 @@ export function createViewer(canvas) {
         const eye=target.map((v,i)=>v+distance*[Math.cos(pitch)*Math.cos(yaw),Math.cos(pitch)*Math.sin(yaw),Math.sin(pitch)][i]);
         gl.uniformMatrix4fv(uniforms.uVP,false,multiply(perspective(40*Math.PI/180,width/height,.01*diagonal,20*diagonal),lookAt(eye,target)));
         const values=boxes.map(b=>b.value), min=Math.min(...values), max=Math.max(...values);
-        const {w,l,h}=state.truck;
+        const { trucks } = getTrucks(state);
         function box(b, colour, lines=false) {
             const selected=b.id!==undefined && b.id===highlight;
             gl.uniform3fv(uniforms.uOffset,selected ? b.min.map(v=>v-.02) : b.min);
@@ -142,7 +165,11 @@ export function createViewer(canvas) {
         gl.bindBuffer(gl.ARRAY_BUFFER,faceBuffer); gl.enableVertexAttribArray(position); gl.enableVertexAttribArray(normal);
         gl.vertexAttribPointer(position,3,gl.FLOAT,false,24,0); gl.vertexAttribPointer(normal,3,gl.FLOAT,false,24,12);
         gl.uniform1i(uniforms.uLit,1); gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(1,1);
-        box({min:[0,0,-.02],size:[w,l,.02]},hex('#E1E6EC'));
+
+        // Menggambar Paket dan Truk (Kontainer)
+        for (const t of trucks) {
+            box({min:[t.offsetX,0,-.02],size:[t.w,t.l,.02]},hex('#E1E6EC'));
+        }
         for (const b of boxes) {
             let colour=mode==='fragility' ? hex(b.fragile?'#E39B1B':'#7D8FA3') : mix(low,high,max===min?.5:(b.value-min)/(max-min));
             if (!b.loaded) colour=mix(colour,hex('#C9CED5'),.65);
@@ -151,8 +178,11 @@ export function createViewer(canvas) {
         gl.disable(gl.POLYGON_OFFSET_FILL); gl.uniform1i(uniforms.uLit,0);
         gl.bindBuffer(gl.ARRAY_BUFFER,edgeBuffer); gl.vertexAttribPointer(position,3,gl.FLOAT,false,0,0);
         gl.disableVertexAttribArray(normal); gl.vertexAttrib3f(normal,0,0,1);
+        
         for (const b of boxes) box(b,b.loaded?ink:mix(ink,hex('#C9CED5'),.5),true);
-        box({min:[0,0,0],size:[w,l,h]},ink,true);
+        for (const t of trucks) {
+            box({min:[t.offsetX,0,0],size:[t.w,t.l,t.h]},ink,true);
+        }
     }
 
 

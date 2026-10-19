@@ -272,14 +272,24 @@ function renderStateTabs() {
 function renderState() {
  renderStateTabs();
  const state = selectedState();
+ const trucks = state.trucks?.length ? state.trucks : [state.truck];
+ const isMultiTruck = trucks.length > 1;
 
  viewer?.setState(state, { colorMode: app.colorMode, highlightId: null });
  $('viewer-caption').textContent =
   (viewer ? '' : 'WebGL tidak tersedia; tabel dan chart tetap jalan. ') +
   selectedRun().labels[app.which] +
-  '. Box di samping truck adalah package yang unloaded.';
+  (isMultiTruck ? ` (${trucks.length} kontainer truk berurutan kiri ke kanan).` : '.') +
+  ' Box di samping truck adalah package yang unloaded.';
 
  const loaded = state.packages.filter(p => p.pos !== null).length;
+ const perTruckSummary = isMultiTruck
+  ? trucks.map((_, idx) => {
+     const count = state.packages.filter(p => p.pos !== null && (p.truck ?? 1) === idx + 1).length;
+     return `T${idx + 1}: ${count} pkt`;
+    }).join(', ')
+  : null;
+
  const figures = [
   ['Objective', state.value],
   ...(state.objective === 'eta_penalty' ? [
@@ -287,6 +297,7 @@ function renderState() {
    ['ETA penalty', state.penalty],
    ['Penalty count', state.penalty_count],
   ] : []),
+  ...(isMultiTruck ? [['Trucks', `${trucks.length} (${perTruckSummary})`]] : []),
   ['Weight / capacity', `${format(state.weight)} / ${format(state.truck.capacity)}`],
   ['Loaded / total', `${loaded} / ${state.packages.length}`],
  ].map(([label, value]) => {
@@ -311,9 +322,13 @@ function renderState() {
   const row = element('tr');
   row.tabIndex = 0;
 
+  const statusText = p.pos === null
+   ? 'Outside'
+   : (isMultiTruck || (p.truck && p.truck > 1) ? `Loaded (Truck ${p.truck ?? 1})` : 'Loaded');
+
   const values = [
    p.id,
-   p.pos === null ? 'Outside' : 'Loaded',
+   statusText,
    p.pos,
    p.dims,
    p.value,
@@ -363,8 +378,25 @@ async function savedResults(selected) {
  if (selected) $('saved-select').value = selected;
 }
 
+async function inputFiles(selected) {
+ const current = selected ?? $('example-select').value;
+ const data = await (await request('/api/inputs')).json();
+ const files = data.files || [];
+ $('example-select').replaceChildren(
+  ...(files.length
+   ? files.map(f => new Option(f.stem.replaceAll('_', ' '), f.name))
+   : [new Option('Belum ada file di input/', '')]),
+ );
+ if (current && files.some(f => f.name === current)) {
+  $('example-select').value = current;
+ }
+ return $('example-select').value;
+}
+
 async function loadExample(name) {
- $('input-text').value = await (await request(`/examples/${name}.txt`)).text();
+ if (!name) return;
+ const fileName = name.endsWith('.txt') ? name : `${name}.txt`;
+ $('input-text').value = await (await request(`/input/${encodeURIComponent(fileName)}`)).text();
 }
 
 export function randomInstance(header, count = 40) {
@@ -455,10 +487,7 @@ async function init() {
   $('viewer-caption').textContent = 'WebGL tidak tersedia; tabel dan chart tetap jalan.';
  }
 
- $('example-select').replaceChildren(
-  ...examples.map(name => new Option(name.replaceAll('_', ' '), name)),
- );
-
+ $('example-select').addEventListener('pointerdown', attempt(() => inputFiles()));
  $('example-select').addEventListener('change',
   attempt(() => loadExample($('example-select').value)));
  $('btn-load').addEventListener('click', attempt(loadSaved));
@@ -473,8 +502,15 @@ async function init() {
  $('file-open').addEventListener('change', attempt(async () => {
   const file = $('file-open').files[0];
   if (!file) return;
-  loadEnvelope(JSON.parse(await file.text()));
-  status(`Berhasil load ${file.name}.`);
+  const text = await file.text();
+  if (file.name.toLowerCase().endsWith('.txt')) {
+   $('input-text').value = text;
+   $('input-panel').open = true;
+   status(`Berhasil memuat input ${file.name}. Klik Jalankan untuk memulai.`);
+  } else {
+   loadEnvelope(JSON.parse(text));
+   status(`Berhasil load ${file.name}.`);
+  }
   $('file-open').value = '';
  }));
 
@@ -505,7 +541,8 @@ async function init() {
   status('Context grafis 3D hilang. Reload halaman untuk restore; tabel dan chart tetap tersedia.', true);
  });
 
- await Promise.all([savedResults(), loadExample(examples[0])]);
+ const [, firstInput] = await Promise.all([savedResults(), inputFiles()]);
+ if (firstInput) await loadExample(firstInput);
 }
 
 if (location.protocol !== 'file:') attempt(init)();
