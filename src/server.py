@@ -8,7 +8,7 @@ import random
 import threading
 import traceback
 from urllib.parse import unquote, urlsplit
-from src.experiment import OUTPUT_DIR, REPO_ROOT, parse_text, run_experiment, save_envelope
+from src.experiment import INPUT_DIR, OUTPUT_DIR, REPO_ROOT, parse_text, run_experiment, save_envelope
 from src.objective import DEFAULT_OBJECTIVE
 
 # Definisi variabel global
@@ -49,6 +49,9 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_response(302)
             self.send_header("Location", "/src/gui/frontend/index.html")
             self.end_headers()
+        elif path == "/api/inputs":
+            files = [{"name": p.name, "stem": p.stem, "size": p.stat().st_size, "modified": p.stat().st_mtime} for p in INPUT_DIR.glob("*.txt") if p.is_file() and not p.is_symlink()]
+            self.json_response(200, {"files": sorted(files, key=lambda p: p["name"].lower())})
         elif path == "/api/results":
             files = [{"name": p.name, "size": p.stat().st_size, "modified": p.stat().st_mtime} for p in OUTPUT_DIR.glob("*.json") if p.is_file() and not p.is_symlink()]
             self.json_response(200, {"files": sorted(files, key=lambda p: p["modified"], reverse=True)})
@@ -65,8 +68,7 @@ class Handler(SimpleHTTPRequestHandler):
         if "\\" in path or "\x00" in path:
             return False
         target = (REPO_ROOT / path.lstrip("/")).resolve()
-        roots = {REPO_ROOT / "src/gui": {".html", ".css", ".js", ".ttf", ".otf", ".woff", ".woff2", ".png", ".svg", ".ico"},
-                 REPO_ROOT / "examples": {".txt"}, OUTPUT_DIR: {".json", ".txt"}}
+        roots = {REPO_ROOT / "src/gui": {".html", ".css", ".js", ".ttf", ".otf", ".woff", ".woff2", ".png", ".svg", ".ico"}, INPUT_DIR: {".txt"}, OUTPUT_DIR: {".json", ".txt"}}
         return target.is_file() and any(target.is_relative_to(root.resolve()) and target.suffix in suffixes for root, suffixes in roots.items())
 
     # Membaca header

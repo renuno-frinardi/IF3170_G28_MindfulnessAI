@@ -19,6 +19,7 @@ from src.solver import solve
 
 # Definisi variable global
 REPO_ROOT = Path(__file__).resolve().parent.parent
+INPUT_DIR = REPO_ROOT / "input"
 OUTPUT_DIR = REPO_ROOT / "output"
 GA_MODES = {"jumlah_populasi", "banyak_iterasi"}
 MAX_PACKAGES = 300
@@ -37,8 +38,12 @@ def parse_text(text):
     if lines[0][1] == "GA":
         if len(lines) < 5:
             raise ValueError("Input GA membutuhkan data truk, mode, nilai kontrol, dan jumlah paket.")
-        if lines[2][1] not in GA_MODES:
-            raise ValueError(f"Baris {lines[2][0]}: mode GA harus tepat 'jumlah_populasi' atau 'banyak_iterasi'.")
+        mode_idx = 2
+        while mode_idx < len(lines) and len(lines[mode_idx][1].split()) == 4:
+            mode_idx += 1
+        if mode_idx >= len(lines) or lines[mode_idx][1] not in GA_MODES:
+            line_no = lines[mode_idx][0] if mode_idx < len(lines) else lines[-1][0]
+            raise ValueError(f"Baris {line_no}: mode GA harus tepat 'jumlah_populasi' atau 'banyak_iterasi'.")
     fd, name = tempfile.mkstemp(suffix=".txt")
     try:
         with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as stream:
