@@ -2,7 +2,6 @@
 
 # Import library
 from dataclasses import dataclass
-import math
 
 # Objective default untuk pemanggilan biasa
 DEFAULT_OBJECTIVE = "value"
@@ -102,7 +101,3 @@ def objective_details(state, mode: str = DEFAULT_OBJECTIVE) -> dict[str, float |
         "value": base_value,
         "objective": mode,
     }
-
-# Menghitung nilai objektif untuk algoritma
-def calculate_objective(state, mode: str = DEFAULT_OBJECTIVE) -> float:
-    return float(objective_details(state, mode)["value"])

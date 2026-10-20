@@ -433,7 +433,7 @@ async function runFromInput() {
  }
 
  $('btn-run').disabled = true;
- status('Running. Batch genetic algorithm bisa agak lama.');
+ status('Running...');
 
  try {
   const body = JSON.stringify({text: $('input-text').value, seed, repeats, objective: $('objective-select').value,});

@@ -57,7 +57,7 @@ def violations(state) -> list[str]:
         if pos is None:
             continue
 
-        x_min, y_min, z_min, x_max, y_max, z_max = pos
+        x_min, y_min, z_min, x_max, y_max, _ = pos
         if z_min == 0: # di lantai
             continue
 
@@ -90,7 +90,7 @@ def violations(state) -> list[str]:
         if fpos is None:
             continue
 
-        fx_min, fy_min, fz_min, fx_max, fy_max, fz_max = fpos
+        fx_min, fy_min, _, fx_max, fy_max, fz_max = fpos
         above = [] # paket di atas fragile
         for other in inside:
             if other.id == fragile.id:

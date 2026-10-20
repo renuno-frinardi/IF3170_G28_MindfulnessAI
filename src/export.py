@@ -201,10 +201,10 @@ def hc_run(result, hc_type, label, seed, params):
 
     # Klasifikasi berdasarkan jenis HC
     if hc_type == "HC_STEEPEST" or hc_type == "HC_STOCHASTIC":
-        run["stats"] += to_stats(**{"Banyak iterasi hingga terminasi": result.iterations})
+        run["stats"] += to_stats(**{"Banyak iterasi": result.iterations})
     elif hc_type == "HC_SIDEWAYS":
         run["stats"] += to_stats(**{
-            "Banyak iterasi hingga terminasi": result.iterations,
+            "Banyak iterasi": result.iterations,
             "Maximum pergerakan samping": params.max_side,
         })
     else:
@@ -262,7 +262,7 @@ def sa_run(result, label, seed, params):
         line_chart("Objektif vs Iterasi", "Iterasi (tahap annealing)", obj_lines),
         line_chart("e^(delta E / T) vs Iterasi", "Iterasi (tahap annealing)", exp_lines, "e^(delta E / T)"),
     ]
-    run["stats"] += to_stats(**{"Berapa kali terjebak": extra["stuck"]})
+    run["stats"] += to_stats(**{"Frekuensi stuck": extra["stuck"]})
     if extra.get("best_states") is not None:
         best = state_to_dict(extra["best_states"], f"{label}/best", all_trucks=all_trucks)
         run["states"]["best"] = best

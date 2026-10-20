@@ -2,7 +2,7 @@
 const colours=['#0072B2','#D55E00','#009E73','#CC79A7','#E69F00','#56B4E9'];
 
 // Mengurangi jumlah titik data (yang terlalu panjang) untuk meningkatkan kinerja rendering
-export function decimate(line) {
+function decimate(line) {
     const {x,y}=line, points=[];
     const size=y.length>4000 ? Math.ceil(y.length/2000) : 1;
 

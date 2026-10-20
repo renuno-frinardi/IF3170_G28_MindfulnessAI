@@ -34,7 +34,6 @@ def move(state, rng):
         pkg.remove()
         return new
     
-    old = (pkg.x, pkg.y, pkg.z) if pkg.is_inside else None
     pkg.remove()
     xs, ys = candidate(new, pkg)
     if not (xs and ys):
@@ -42,10 +41,7 @@ def move(state, rng):
     
     if not try_place(new, pkg, rng.choice(xs), rng.choice(ys)):
         return None
-    
-    if old is not None and (pkg.x, pkg.y, pkg.z) == old:
-        return None
-    
+
     return new
 
 # rotasi 90 derajat terhadap suatu sumbu
